@@ -213,7 +213,9 @@ void GlobalSettings::lookForFileSystems(const std::string& path) {
                 std::string fsVersion;
                 std::string depend;
                 FsZip::readFileFromZip(filepath, "version.txt", fsVersion);
+                stringTrim(fsVersion);
                 FsZip::readFileFromZip(filepath, "depends.txt", depend);
+                stringTrim(depend);
                 GlobalSettings::wineVersions.push_back(WineVersion(wineVersion, fsVersion, filepath, "", depend));
             }
             std::string winetricksVersion;
@@ -223,7 +225,9 @@ void GlobalSettings::lookForFileSystems(const std::string& path) {
                 std::string dlls;
                 std::string fonts;
                 FsZip::readFileFromZip(filepath, "version.txt", fsVersion);
+                stringTrim(fsVersion);
                 FsZip::readFileFromZip(filepath, "depends.txt", depend);
+                stringTrim(depend);
                 FsZip::readFileFromZip(filepath, "dlls.txt", dlls);
                 FsZip::readFileFromZip(filepath, "fonts.txt", fonts);
                 WineVersion v = WineVersion(winetricksVersion, fsVersion, filepath, "", depend);

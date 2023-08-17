@@ -24,6 +24,8 @@ ContainersView::ContainersView(std::string tab, std::string app) : BaseView("Con
         bool renderer = this->currentContainer->getWineVersionAsNumber(this->containerWineVersionControl->getSelectionStringValue()) > 500;
         containerGdiControl->setRowHidden(renderer);
         containerRendererControl->setRowHidden(!renderer);
+        WineVersion* wine = GlobalSettings::getInstalledWineFromName(this->containerWineVersionControl->getSelectionStringValue());
+        appDirectDrawAutoRefreshControl->setReadOnly(atoi(wine->fsVersion.c_str()) < 7);
     };
 
     containerWindowsVersionControl = createWindowsVersionCombobox(section);
@@ -533,8 +535,13 @@ bool ContainersView::saveChanges() {
             }
             this->currentContainer->setWineVersion(this->containerWineVersionControl->getSelectionStringValue());
             this->currentContainer->setWindowsVersion(BoxedwineData::getWinVersions()[this->containerWindowsVersionControl->getSelection()]);
-            this->currentContainer->setGDI(containerGdiControl->isChecked());
-            this->currentContainer->setRenderer(containerRendererControl->getSelectionStringValue());
+            if (this->currentContainer->getWineVersionAsNumber() > 500) {
+                this->currentContainer->setGDI(containerRendererControl->getSelectionStringValue() == "gdi");
+                this->currentContainer->setRenderer(containerRendererControl->getSelectionStringValue());
+            } else {
+                this->currentContainer->setGDI(containerGdiControl->isChecked());
+                this->currentContainer->setRenderer(containerGdiControl->isChecked()?"gdi":"gl");
+            }
             this->currentContainer->setMouseWarpOverride(containerMouseWarpControl->getSelectionStringValue());
             this->currentContainer->saveContainer();
             this->currentContainerChanged = false;            
@@ -614,6 +621,10 @@ void ContainersView::setCurrentApp(BoxedApp* app) {
     appSkipFramesControl->setText(std::to_string(app->skipFramesFPS));
     appShowWindowImmediatelyControl->setCheck(app->showWindowImmediately);
     appDirectDrawAutoRefreshControl->setCheck(app->autoRefresh);
+    WineVersion* wine = GlobalSettings::getInstalledWineFromName(this->containerWineVersionControl->getSelectionStringValue());
+    bool hasAutoRefresh = atoi(wine->fsVersion.c_str()) >= 7;
+    appDirectDrawAutoRefreshControl->setReadOnly(!hasAutoRefresh);
+    appDirectDrawAutoRefreshControl->setHelpId(hasAutoRefresh ? CONTAINER_VIEW_AUTO_REFRESH_HELP : CONTAINER_VIEW_AUTO_REFRESH_MISSING_HELP);
 #ifdef BOXEDWINE_MULTI_THREADED
     appCpuAffinityControl->setSelectionIntValue(app->cpuAffinity);
 #endif
